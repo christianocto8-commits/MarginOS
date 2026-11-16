@@ -1,0 +1,280 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model Business {
+  id                 String    @id @default(cuid())
+  name               String
+  slug               String    @unique
+  ownerName          String?
+  phone              String?
+  subscriptionPlan   String    @default("FREE_TRIAL") // FREE_TRIAL, STARTER, PRO
+  subscriptionStatus String    @default("ACTIVE")     // ACTIVE, EXPIRED, CANCELLED
+  trialEndsAt        DateTime?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  users              User[]
+  outlets            Outlet[]
+  customers          CrmCustomer[]
+}
+
+model User {
+  id           String    @id @default(cuid())
+  businessId   String
+  name         String
+  email        String    @unique
+  passwordHash String
+  role         String    @default("OWNER") // OWNER, MANAGER, STAFF
+  status       String    @default("ACTIVE") // ACTIVE, SUSPENDED
+  phone        String?
+  avatarUrl    String?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  business     Business  @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  @@index([businessId])
+}
+
+model CrmCustomer {
+  id          String    @id @default(cuid())
+  businessId  String
+  name        String
+  company     String?
+  email       String?
+  phone       String?
+  category    String    @default("REGULAR") // VIP, CATERING_B2B, CORPORATE, REGULAR, EVENT
+  status      String    @default("ACTIVE")   // ACTIVE, PROSPECT, INACTIVE
+  totalSpent  Float     @default(0.0)
+  totalOrders Int       @default(0)
+  notes       String?
+  lastContact DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  business    Business  @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  @@index([businessId])
+}
+
+model Outlet {
+  id                    String            @id @default(cuid())
+  businessId            String?
+  name                  String
+  code                  String            @unique
+  category              String            // Coffee Shop, Restaurant, Bakery, Cloud Kitchen, Catering
+  address               String?
+  phone                 String?
+  currency              String            @default("IDR")
+  targetFoodCostPercent Float             @default(30.0)
+  monthlyFixedCost      Float             @default(15000000.0) // Gaji tetap, sewa, utilitas untuk kalkulator BEP
+  createdAt             DateTime          @default(now())
+  updatedAt             DateTime          @updatedAt
+
+  business              Business?         @relation(fields: [businessId], references: [id], onDelete: SetNull)
+  ingredients           Ingredient[]
+  subRecipes            SubRecipe[]
+  menus                 Menu[]
+  inventoryPeriods      InventoryPeriod[]
+  purchases             PurchaseLog[]
+
+  @@index([businessId])
+}
+
+model Ingredient {
+  id              String                    @id @default(cuid())
+  outletId        String
+  name            String
+  sku             String?
+  category        String                    // Protein, Dairy, Coffee Beans, Dry Goods, Produce, Seasoning, Packaging, Beverage, Other
+  supplier        String?
+  purchasePrice   Float                     // Harga beli per kemasan (IDR)
+  packageSize     Float                     // Ukuran kemasan (misal 1000 untuk 1 kg, 1 untuk 1 pcs)
+  purchaseUnit    String                    // kg, gr, liter, ml, pcs, pack, karton, ikat, butir, oz
+  yieldPercent    Float                     @default(100.0) // Yield bersih setelah proses trimming/cleaning (0-100%)
+  isPackaging     Boolean                   @default(false) // Ditandai khusus kemasan takeaway/delivery
+  currentStock    Float                     @default(0.0)
+  minStockAlert   Float                     @default(0.0)
+  createdAt       DateTime                  @default(now())
+  updatedAt       DateTime                  @updatedAt
+
+  outlet          Outlet                    @relation(fields: [outletId], references: [id], onDelete: Cascade)
+  priceHistory    IngredientPriceHistory[]
+  subRecipeItems  SubRecipeItem[]
+  menuRecipeItems MenuRecipeItem[]
+  inventoryLogs   InventoryLog[]
+
+  @@index([outletId])
+  @@index([category])
+}
+
+model IngredientPriceHistory {
+  id            String      @id @default(cuid())
+  ingredientId  String
+  price         Float
+  packageSize   Float
+  purchaseUnit  String
+  changePercent Float       @default(0.0) // Persentase kenaikan/penurunan harga
+  notes         String?
+  effectiveDate DateTime    @default(now())
+  createdAt     DateTime    @default(now())
+
+  ingredient    Ingredient  @relation(fields: [ingredientId], references: [id], onDelete: Cascade)
+
+  @@index([ingredientId])
+}
+
+model SubRecipe {
+  id              String            @id @default(cuid())
+  outletId        String
+  name            String            // e.g. House Blend Syrup, Saus Bolognese, Adonan Croissant
+  category        String            // Syrup/Sauce, Dough/Pastry, Stock/Broth, Pre-mix, Garnish, Other
+  description     String?
+  batchYield      Float             // Total hasil jadi per batch
+  batchUnit       String            // gr, ml, pcs, porsi
+  shelfLifeDays   Int               @default(7)
+  storageMethod   String?           // Chiller, Freezer, Suhu Ruang
+  directLaborCost Float             @default(0.0)
+  overheadCost    Float             @default(0.0)
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+
+  outlet          Outlet            @relation(fields: [outletId], references: [id], onDelete: Cascade)
+  items           SubRecipeItem[]
+  menuRecipeItems MenuRecipeItem[]
+
+  @@index([outletId])
+}
+
+model SubRecipeItem {
+  id           String      @id @default(cuid())
+  subRecipeId  String
+  ingredientId String
+  quantity     Float
+  unit         String      // gr, ml, pcs, etc.
+  notes        String?
+
+  subRecipe    SubRecipe   @relation(fields: [subRecipeId], references: [id], onDelete: Cascade)
+  ingredient   Ingredient  @relation(fields: [ingredientId], references: [id], onDelete: Restrict)
+
+  @@index([subRecipeId])
+  @@index([ingredientId])
+}
+
+model Menu {
+  id                              String            @id @default(cuid())
+  outletId                        String
+  name                            String
+  sku                             String?
+  category                        String            // Beverage, Main Course, Pastry & Bakery, Snack & Appetizer, Dessert, Catering
+  description                     String?
+  sellingPriceDineIn              Float             // Harga Jual Dine-In (Rp)
+  sellingPriceOnline              Float             // Harga Jual Delivery / Ojek Online (Rp)
+  monthlySalesVolume              Int               @default(100) // Estimasi porsi terjual per bulan
+  wastePercent                    Float             @default(2.0) // Buffer waste / tumpah (0 - 15%)
+  directLaborCost                 Float             @default(0.0) // Biaya tenaga kerja per porsi
+  targetFoodCostPercent           Float             @default(30.0) // Target food cost % (misal 30%)
+  onlinePlatformCommissionPercent Float             @default(20.0) // Komisi GoFood/GrabFood (20%)
+  onlinePlatformFlatFee           Float             @default(1000.0) // Biaya per transaksi (Rp 1.000)
+  merchantPromoSharePercent       Float             @default(0.0) // Promo diskon yang ditanggung resto
+  restaurantTaxPercent            Float             @default(10.0) // PB1 Pemda (10%)
+  serviceChargePercent            Float             @default(5.0)  // Service Charge (5%)
+  isPublished                     Boolean           @default(true)
+  createdAt                       DateTime          @default(now())
+  updatedAt                       DateTime          @updatedAt
+
+  outlet                          Outlet            @relation(fields: [outletId], references: [id], onDelete: Cascade)
+  recipeItems                     MenuRecipeItem[]
+
+  @@index([outletId])
+  @@index([category])
+}
+
+model MenuRecipeItem {
+  id           String      @id @default(cuid())
+  menuId       String
+  ingredientId String?     // Terisi jika item bahan baku
+  subRecipeId  String?     // Terisi jika item olahan setengah jadi
+  itemType     String      @default("ingredient") // "ingredient" | "sub_recipe"
+  quantity     Float
+  unit         String
+  channel      String      @default("all") // "all" (semua), "dine_in_only", "online_only" (packaging delivery)
+  notes        String?
+
+  menu         Menu        @relation(fields: [menuId], references: [id], onDelete: Cascade)
+  ingredient   Ingredient? @relation(fields: [ingredientId], references: [id], onDelete: Restrict)
+  subRecipe    SubRecipe?  @relation(fields: [subRecipeId], references: [id], onDelete: Restrict)
+
+  @@index([menuId])
+  @@index([ingredientId])
+  @@index([subRecipeId])
+}
+
+model InventoryPeriod {
+  id              String         @id @default(cuid())
+  outletId        String
+  periodName      String         // e.g. "Minggu 1 November 2026"
+  startDate       DateTime
+  endDate         DateTime
+  status          String         @default("draft") // "draft" | "closed"
+  theoreticalCOGS Float          @default(0.0)
+  actualCOGS      Float          @default(0.0)
+  varianceAmount  Float          @default(0.0) // Selisih nominal (Rp)
+  variancePercent Float          @default(0.0) // Selisih persentase (%)
+  totalRevenue    Float          @default(0.0)
+  notes           String?
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  outlet          Outlet         @relation(fields: [outletId], references: [id], onDelete: Cascade)
+  logs            InventoryLog[]
+
+  @@index([outletId])
+}
+
+model InventoryLog {
+  id                String          @id @default(cuid())
+  inventoryPeriodId String
+  ingredientId      String
+  beginningStock    Float           @default(0.0)
+  purchases         Float           @default(0.0)
+  endingStock       Float           @default(0.0)
+  unitCost          Float           @default(0.0)
+  theoreticalUsage  Float           @default(0.0)
+  actualUsage       Float           @default(0.0)
+  varianceQty       Float           @default(0.0)
+  varianceCost      Float           @default(0.0)
+  notes             String?
+
+  period            InventoryPeriod @relation(fields: [inventoryPeriodId], references: [id], onDelete: Cascade)
+  ingredient        Ingredient      @relation(fields: [ingredientId], references: [id], onDelete: Restrict)
+
+  @@index([inventoryPeriodId])
+  @@index([ingredientId])
+}
+
+model PurchaseLog {
+  id             String         @id @default(cuid())
+  outletId       String
+  invoiceNumber  String
+  supplierName   String
+  purchaseDate   DateTime       @default(now())
+  totalAmount    Float          @default(0.0)
+  paymentMethod  String         @default("TRANSFER") // CASH, TRANSFER, TEMPO_UTANG
+  paymentStatus  String         @default("PAID")     // PAID, UNPAID, PENDING
+  notes          String?
+  itemsJson      String         // Stored JSON array of items: [{ ingredientId, ingredientName, quantity, unit, pricePerUnit, subtotal }]
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+
+  outlet         Outlet         @relation(fields: [outletId], references: [id], onDelete: Cascade)
+
+  @@index([outletId])
+  @@index([supplierName])
+}

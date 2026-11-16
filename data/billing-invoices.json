@@ -1,0 +1,16 @@
+[
+  {
+    "id": "inv_1794800031281_6531",
+    "invoiceNumber": "INV-MOS-20261116-6531",
+    "businessId": "cmwi69aw8000fvcigeurno4x1",
+    "businessName": "Kedai Kopi Sudut Temu",
+    "plan": "STARTER",
+    "billingCycle": "ANNUALLY",
+    "amount": 1490000,
+    "paymentMethod": "QRIS",
+    "paymentStatus": "PENDING",
+    "qrisData": "00020101021226680016ID.CO.MARGINOS.WWW011893600918000000000052045812530336054014900005802ID5916MARGINOS TECH ID6007JAKARTA62190115INV-MOS-20261116-65316304",
+    "expiredAt": "2026-11-17T03:33:51.281Z",
+    "createdAt": "2026-11-16T03:33:51.281Z"
+  }
+]
