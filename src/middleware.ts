@@ -5,6 +5,9 @@ const COOKIE_NAME = "marginos_token";
 
 // Protected app routes requiring authentication
 const PROTECTED_PREFIXES = [
+  "/portal",
+  "/pos",
+  "/settings",
   "/dashboard",
   "/menus",
   "/ingredients",
@@ -63,12 +66,12 @@ export function middleware(req: NextRequest) {
     }
   }
 
-  // 2. If already logged in and visiting /login or /register, route to their respective dashboard
+  // 2. If already logged in and visiting /login or /register, route to the module portal
   if ((pathname === "/login" || pathname === "/register") && token && payload) {
     if (payload.role === "SUPER_ADMIN") {
       return NextResponse.redirect(new URL("/super-admin", req.url));
     }
-    return NextResponse.redirect(new URL("/dashboard", req.url));
+    return NextResponse.redirect(new URL("/portal", req.url));
   }
 
   return NextResponse.next();

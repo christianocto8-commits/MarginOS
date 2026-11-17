@@ -98,8 +98,15 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     window.location.href = "/";
   };
 
-  // If on landing or auth pages, render standalone view without shell frame
-  if (pathname === "/" || pathname === "/landing" || pathname === "/login" || pathname === "/register") {
+  // If on landing, auth, portal, or POS pages, render standalone view without shell frame
+  if (
+    pathname === "/" ||
+    pathname === "/landing" ||
+    pathname === "/login" ||
+    pathname === "/register" ||
+    pathname === "/portal" ||
+    pathname === "/pos"
+  ) {
     return <>{children}</>;
   }
 
@@ -120,31 +127,33 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       ]
     : [
         {
-          title: "Kalkulasi & Resep",
+          title: "Point of Sale (POS)",
+          items: [
+            { name: "Terminal Kasir POS", href: "/pos", icon: ShoppingBag, badge: "POS", badgeColor: "teal" },
+          ],
+        },
+        {
+          title: "Back Office & Dapur",
           items: [
             { name: "Dashboard Analitik", href: "/dashboard", icon: LayoutDashboard, badge: "Live", badgeColor: "teal" },
             { name: "Kalkulator Cepat HPP", href: "/quick-calc", icon: Calculator, badge: "Calc", badgeColor: "grey" },
             { name: "Katalog & Resep Menu", href: "/menus", icon: UtensilsCrossed, badge: "Menu", badgeColor: "grey" },
             { name: "Simulator Harga Ojol", href: "/pricing-simulator", icon: Smartphone, badge: "Ojol", badgeColor: "amber" },
-          ],
-        },
-        {
-          title: "Bahan Baku & Dapur",
-          items: [
             { name: "Bahan Mentah & Yield", href: "/ingredients", icon: Package, badge: "Yield", badgeColor: "grey" },
-            { name: "Belanja Bahan (Restock)", href: "/purchases", icon: ShoppingBag, badge: "PO", badgeColor: "blue" },
+            { name: "Belanja Bahan (PO)", href: "/purchases", icon: ShoppingBag, badge: "PO", badgeColor: "blue" },
             { name: "Olahan Sub-Resep", href: "/sub-recipes", icon: Layers, badge: "Batch", badgeColor: "grey" },
             { name: "Stok Opname COGS", href: "/cogs-inventory", icon: ClipboardCheck, badge: "COGS", badgeColor: "teal" },
+            { name: "Cetak SOP Dapur", href: "/sop-export", icon: Printer, badge: "PDF", badgeColor: "grey" },
           ],
         },
         {
-          title: "Analisis & Bisnis",
+          title: "Pengaturan & Bisnis",
           items: [
+            { name: "Pengaturan Sistem", href: "/settings", icon: Settings, badge: "Set", badgeColor: "teal" },
+            { name: "Cabang & Outlet", href: "/outlets", icon: Store, badge: "Store", badgeColor: "grey" },
+            { name: "Kelola Akun & Hak Akses", href: "/admin", icon: Users, badge: "RBAC", badgeColor: "grey" },
             { name: "Matriks Menu & BEP", href: "/menu-engineering", icon: TrendingUp, badge: "BEP", badgeColor: "amber" },
             { name: "Laporan Laba Rugi", href: "/financials", icon: PieChart, badge: "P&L", badgeColor: "grey" },
-            { name: "Cetak SOP Dapur", href: "/sop-export", icon: Printer, badge: "PDF", badgeColor: "grey" },
-            { name: "Cabang & Outlet", href: "/outlets", icon: Store, badge: "Store", badgeColor: "grey" },
-            { name: "Kelola Akun & CRM", href: "/admin", icon: Settings, badge: "CRM", badgeColor: "grey" },
           ],
         },
       ];
@@ -166,6 +175,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     if (pathname.startsWith("/menu-engineering")) return "Matriks Menu Engineering & BEP";
     if (pathname.startsWith("/financials")) return "Laporan Laba Rugi (P&L)";
     if (pathname.startsWith("/sop-export")) return "SOP Resep Dapur & Ekspor HPP";
+    if (pathname.startsWith("/settings")) return "Pengaturan Sistem & Outlet";
     if (pathname.startsWith("/outlets")) return "Manajemen Cabang & Outlet";
     if (pathname.startsWith("/admin")) return "Administrator Akun & Pengaturan";
     if (pathname.startsWith("/super-admin")) return "Super Admin Platform Owner";
@@ -529,10 +539,61 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             </div>
           </div>
 
-          {/* Right: Quick Shortcuts + Theme Toggle */}
-          <div className="flex items-center gap-2 sm:gap-3">
+          {/* Right: Quick Module Switcher + Shortcuts + Theme Toggle */}
+          <div className="flex items-center gap-1.5 sm:gap-2.5">
+            {/* Quick Module Switcher Pills */}
+            <div className="hidden md:flex items-center gap-1 p-0.5 rounded-xl bg-zinc-100 dark:bg-white/[0.06] border border-zinc-200 dark:border-white/[0.08] text-xs">
+              <Link
+                href="/portal"
+                className="px-2.5 py-1 rounded-lg text-zinc-600 dark:text-zinc-400 hover:text-zinc-950 dark:hover:text-white font-medium hover:bg-white dark:hover:bg-white/[0.08] transition-colors"
+                title="Kembali ke Portal Pilihan Modul"
+              >
+                Portal
+              </Link>
+              <Link
+                href="/pos"
+                className="px-2.5 py-1 rounded-lg text-teal-700 dark:text-[#00b5ad] font-bold hover:bg-white dark:hover:bg-white/[0.08] transition-colors flex items-center gap-1"
+                title="Buka Kasir POS"
+              >
+                <ShoppingBag className="w-3 h-3" />
+                <span>POS</span>
+              </Link>
+              <Link
+                href="/dashboard"
+                className={`px-2.5 py-1 rounded-lg font-bold transition-colors ${
+                  pathname === "/dashboard"
+                    ? "bg-white dark:bg-[#22242c] text-zinc-950 dark:text-white shadow-2xs"
+                    : "text-zinc-600 dark:text-zinc-400 hover:text-zinc-950 dark:hover:text-white"
+                }`}
+                title="Back Office Operasional"
+              >
+                Back Office
+              </Link>
+              <Link
+                href="/settings"
+                className={`px-2.5 py-1 rounded-lg font-bold transition-colors ${
+                  pathname === "/settings"
+                    ? "bg-white dark:bg-[#22242c] text-zinc-950 dark:text-white shadow-2xs"
+                    : "text-zinc-600 dark:text-zinc-400 hover:text-zinc-950 dark:hover:text-white"
+                }`}
+                title="Pengaturan Sistem"
+              >
+                Setting
+              </Link>
+            </div>
+
+            <div className="h-4 w-[1px] bg-zinc-200 dark:border-white/[0.08] hidden md:block" />
+
             {/* LIGHT / DARK THEME TOGGLE BUTTON */}
             <ThemeToggle variant="icon" />
+
+            <Link
+              href="/portal"
+              className="h-8 px-2.5 rounded-lg bg-teal-50 dark:bg-teal-500/10 hover:bg-teal-100 dark:hover:bg-teal-500/20 border border-teal-200 dark:border-teal-500/30 flex items-center gap-1.5 text-xs font-bold text-teal-800 dark:text-[#00b5ad] transition-colors shadow-2xs"
+              title="Portal Modul Aplikasi"
+            >
+              <span>Portal Hub</span>
+            </Link>
 
             <Link
               href="/menus"

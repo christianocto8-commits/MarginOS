@@ -103,7 +103,7 @@ export default function LoginPage() {
       if (data.user?.role === "SUPER_ADMIN") {
         router.push("/super-admin");
       } else {
-        router.push("/dashboard");
+        router.push("/portal");
       }
       router.refresh();
     } catch (err: any) {

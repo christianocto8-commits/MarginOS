@@ -80,4 +80,22 @@ describe("MarginOS Live API Security Integration Tests", () => {
     const res = await fetch(`${BASE_URL}/api/billing/check-status?invoiceId=INV-123`);
     assert.equal(res.status, 401);
   });
+
+  it("GET /portal redirects unauthenticated callers with 307 to /login", async () => {
+    const res = await fetch(`${BASE_URL}/portal`, { redirect: "manual" });
+    assert.equal(res.status, 307);
+    assert.ok(res.headers.get("location")?.includes("/login"));
+  });
+
+  it("GET /pos redirects unauthenticated callers with 307 to /login", async () => {
+    const res = await fetch(`${BASE_URL}/pos`, { redirect: "manual" });
+    assert.equal(res.status, 307);
+    assert.ok(res.headers.get("location")?.includes("/login"));
+  });
+
+  it("GET /settings redirects unauthenticated callers with 307 to /login", async () => {
+    const res = await fetch(`${BASE_URL}/settings`, { redirect: "manual" });
+    assert.equal(res.status, 307);
+    assert.ok(res.headers.get("location")?.includes("/login"));
+  });
 });

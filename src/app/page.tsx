@@ -81,7 +81,7 @@ export default function RootLandingPage() {
     },
   ];
 
-  const dashboardHref = session?.user?.role === "SUPER_ADMIN" ? "/super-admin" : "/dashboard";
+  const dashboardHref = session?.user?.role === "SUPER_ADMIN" ? "/super-admin" : "/portal";
 
   return (
     <div className="min-h-screen bg-[#faf8f5] text-[#1c1917] font-sans selection:bg-amber-500/20 selection:text-amber-950">
@@ -137,7 +137,7 @@ export default function RootLandingPage() {
                 className="text-xs font-semibold px-4 py-2 rounded-lg bg-[#1c1917] hover:bg-[#292524] text-white transition-colors shadow-xs flex items-center gap-2"
               >
                 <LayoutDashboard className="w-3.5 h-3.5 text-[#00b5ad]" />
-                <span>Buka Dashboard ({session.user.name?.split(" ")[0] || "Akun"})</span>
+                <span>Buka Menu Modul ({session.user.name?.split(" ")[0] || "Akun"})</span>
               </Link>
             ) : (
               <>
@@ -190,7 +190,7 @@ export default function RootLandingPage() {
                   href={dashboardHref}
                   className="rounded-lg bg-[#1c1917] hover:bg-[#292524] text-white font-semibold text-xs sm:text-sm px-6 py-3.5 transition-colors flex items-center gap-2 shadow-xs"
                 >
-                  <span>Masuk ke Dashboard Saya</span>
+                  <span>Masuk ke Portal Aplikasi</span>
                   <ArrowRight className="w-4 h-4" />
                 </Link>
               ) : (
